@@ -6,7 +6,7 @@ const animalsRoutes = require('./routes/animals-routes');
 const port = 5000;
 const app = express();
 
-app.use(animalsRoutes);
+app.use('/api/animals', animalsRoutes);
 
 
 app.listen(port);
