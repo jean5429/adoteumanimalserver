@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
+const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
 
@@ -178,6 +179,13 @@ const getAnimalById = (req, res, next) => {
 
 const createAnimal = (req, res, next) => {
     console.log('POST Request creating Animal');
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        console.log(errors);
+        throw new HttpError('Dados inválidos.', 422);
+    }
+
     const {
         name,
         city,
@@ -187,6 +195,10 @@ const createAnimal = (req, res, next) => {
         description,
         appearance,
     } = req.body;
+
+    if (species !== 'dog' && species !== 'cat') {
+        throw new HttpError('Campo species deve ser cat ou dog', 422);
+    }
     const createdAnimal = {
         id: uuidv4(),
         name,
@@ -204,6 +216,13 @@ const createAnimal = (req, res, next) => {
 
 const updateAnimal = (req, res, next) => {
     console.log('PATCH Request updating Animal');
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        console.log(errors);
+        throw new HttpError('Dados inválidos.', 422);
+    }
+
     const { name, city, image, description, appearance } = req.body;
     const animalID = req.params.animalID;
 
