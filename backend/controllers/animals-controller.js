@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const HttpError = require('../models/http-error');
 
-const ANIMALS = [
+let ANIMALS = [
     {
         id: '1',
         name: 'Caramelo',
@@ -141,20 +141,20 @@ const ANIMALS = [
 const getAnimalsByUserId = (req, res, next) => {
     console.log('GET Request in Animals by userID');
     const userID = req.params.userID;
-    const animal = ANIMALS.filter((a) => {
+    const animals = ANIMALS.filter((a) => {
         return a.owner === userID;
     });
 
-    if (!animal) {
+    if (!animals || animals.length === 0) {
         return next(
             new HttpError(
-                'Não foi possível encontar um animal para o usuário.',
+                'Não foi possível encontar animais para o usuário.',
                 404
             )
         );
     }
 
-    res.json({ animal });
+    res.json({ animals });
 };
 
 const getAnimalById = (req, res, next) => {
@@ -202,6 +202,60 @@ const createAnimal = (req, res, next) => {
     res.status(201).json({ animal: createdAnimal });
 };
 
+const updateAnimal = (req, res, next) => {
+    console.log('PATCH Request updating Animal');
+    const { name, city, image, description, appearance } = req.body;
+    const animalID = req.params.animalID;
+
+    const updatedAnimal = { ...ANIMALS.find((a) => a.id === animalID) };
+
+    if (!updatedAnimal) {
+        return next(
+            new HttpError(
+                'Não foi possível encontar um animal para o id ' + animalID,
+                404
+            )
+        );
+    }
+
+    const animalIndex = ANIMALS.findIndex((a) => a.id === animalID);
+    updatedAnimal.name = name;
+    updatedAnimal.city = city;
+    updatedAnimal.image = image;
+    updatedAnimal.description = description;
+    updatedAnimal.appearance = appearance;
+
+    ANIMALS[animalIndex] = updatedAnimal;
+
+    res.status(200).json({ animal: updatedAnimal });
+};
+
+const deleteAnimal = (req, res, next) => {
+    console.log('DELETE Request deleting Animal');
+    const animalID = req.params.animalID;
+
+    const animal = ANIMALS.find((a) => {
+        return a.id === animalID;
+    });
+
+    if (!animal) {
+        return next(
+            new HttpError(
+                'Não foi possível encontar um animal para o id ' + animalID,
+                404
+            )
+        );
+    }
+
+    ANIMALS = ANIMALS.filter((a) => a.id !== animalID);
+    res.status(200).json({
+        message: 'Animal deleted succesfully! ',
+        animal,
+    });
+};
+
 exports.getAnimalById = getAnimalById;
 exports.getAnimalsByUserId = getAnimalsByUserId;
 exports.createAnimal = createAnimal;
+exports.updateAnimal = updateAnimal;
+exports.deleteAnimal = deleteAnimal;
