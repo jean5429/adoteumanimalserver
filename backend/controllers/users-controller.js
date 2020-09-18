@@ -67,6 +67,31 @@ const login = (req, res, next) => {
     res.json({ message: 'Usuário autenticado!' });
 };
 
+const deleteUser = (req, res, next) => {
+    console.log('DELETE user request');
+    const userID = req.params.userID;
+
+    const user = USERS.find((u) => {
+        return u.id === userID;
+    });
+
+    if (!user) {
+        return next(
+            new HttpError(
+                'Não foi possível encontar um usuário para o id ' + userID,
+                404
+            )
+        );
+    }
+
+    USERS = USERS.filter((u) => u.id !== userID);
+    res.status(200).json({
+        message: 'User deleted succesfully! ',
+        user,
+    });
+};
+
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;
+exports.deleteUser = deleteUser;
