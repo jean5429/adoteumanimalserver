@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 
 const HttpError = require('../models/http-error');
+const Animal = require('../models/animal');
 
 let ANIMALS = [
     {
@@ -139,45 +140,60 @@ let ANIMALS = [
     },
 ];
 
-const getAnimalsByUserId = (req, res, next) => {
+const getAnimalsByUserId = async (req, res, next) => {
     console.log('GET Request in Animals by userID');
     const userID = req.params.userID;
-    const animals = ANIMALS.filter((a) => {
-        return a.owner === userID;
-    });
+    let animals;
+
+    try {
+        animals = await Animal.find({ owner: userID });
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível encontrar animais para o usuário.',
+            500
+        );
+        return next(error);
+    }
 
     if (!animals || animals.length === 0) {
-        return next(
-            new HttpError(
-                'Não foi possível encontar animais para o usuário.',
-                404
-            )
+        const error = new HttpError(
+            'Não foi possível encontar animais para o usuário.',
+            404
         );
+        return next(error);
     }
 
-    res.json({ animals });
+    res.json({
+        animals: animals.map((animal) => animal.toObject({ getters: true })),
+    });
 };
 
-const getAnimalById = (req, res, next) => {
+const getAnimalById = async (req, res, next) => {
     console.log('GET Request in Animals by animalID');
     const animalID = req.params.animalID;
-    const animal = ANIMALS.find((a) => {
-        return a.id === animalID;
-    });
-
-    if (!animal) {
-        return next(
-            new HttpError(
-                'Não foi possível encontar um animal para o id ' + animalID,
-                404
-            )
+    let animal;
+    try {
+        animal = await Animal.findById(animalID);
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível encontrar o animal.',
+            500
         );
+        return next(error);
     }
 
-    res.json({ animal });
+    if (!animal) {
+        const error = new HttpError(
+            'Não foi possível encontar um animal para o id ' + animalID,
+            404
+        );
+        return next(error);
+    }
+
+    res.json({ animal: animal.toObject({ getters: true }) });
 };
 
-const createAnimal = (req, res, next) => {
+const createAnimal = async (req, res, next) => {
     console.log('POST Request creating Animal');
     const errors = validationResult(req);
 
@@ -199,8 +215,7 @@ const createAnimal = (req, res, next) => {
     if (species !== 'dog' && species !== 'cat') {
         throw new HttpError('Campo species deve ser cat ou dog', 422);
     }
-    const createdAnimal = {
-        id: uuidv4(),
+    const createdAnimal = new Animal({
         name,
         city,
         species,
@@ -208,9 +223,18 @@ const createAnimal = (req, res, next) => {
         owner,
         description,
         appearance,
-    };
+    });
 
-    ANIMALS.push(createdAnimal);
+    try {
+        await createdAnimal.save();
+    } catch (err) {
+        const error = new HttpError(
+            'Cadastro de animal falho, por favor tente novamente',
+            500
+        );
+        return next(error);
+    }
+
     res.status(201).json({ animal: createdAnimal });
 };
 

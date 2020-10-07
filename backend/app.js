@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParse = require('body-parser');
+const mongoose = require('mongoose');
 
 const animalsRoutes = require('./routes/animals-routes');
 const usersRoutes = require('./routes/users-routes');
@@ -25,5 +26,19 @@ app.use((error, req, res, next) => {
     res.status(error.code || 500);
     res.json({ message: error.message || 'Erro desconhecido!' });
 });
-
-app.listen(port);
+/*
+ * MongoDB Atlas Connection - Just in case:
+ * mongodb+srv://admin:YjWXySawV7g38uw@cluster0.lkuio.mongodb.net/AdoteUmAnimal?retryWrites=true&w=majority
+ * LocalHost:
+ * mongodb://localhost:27017/AdoteUmAnimal
+ */
+mongoose
+    .connect('mongodb://localhost:27017/AdoteUmAnimal')
+    .then(() => {
+        console.log('DB connected succesfully!');
+        app.listen(port);
+    })
+    .catch((err) => {
+        console.log('error');
+        console.log(err);
+    });
