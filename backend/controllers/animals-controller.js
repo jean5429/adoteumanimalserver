@@ -238,7 +238,7 @@ const createAnimal = async (req, res, next) => {
     res.status(201).json({ animal: createdAnimal });
 };
 
-const updateAnimal = (req, res, next) => {
+const updateAnimal = async (req, res, next) => {
     console.log('PATCH Request updating Animal');
     const errors = validationResult(req);
 
@@ -250,36 +250,32 @@ const updateAnimal = (req, res, next) => {
     const { name, city, image, description, appearance } = req.body;
     const animalID = req.params.animalID;
 
-    const updatedAnimal = { ...ANIMALS.find((a) => a.id === animalID) };
-
-    if (!updatedAnimal) {
-        return next(
-            new HttpError(
-                'Não foi possível encontar um animal para o id ' + animalID,
-                404
-            )
+    let animal;
+    try {
+        animal = await Animal.findById(animalID);
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível atualizar o animal.',
+            500
         );
+        return next(error);
     }
 
-    const animalIndex = ANIMALS.findIndex((a) => a.id === animalID);
-    updatedAnimal.name = name;
-    updatedAnimal.city = city;
-    updatedAnimal.image = image;
-    updatedAnimal.description = description;
-    updatedAnimal.appearance = appearance;
+    animal.name = name;
+    animal.city = city;
+    animal.image = image;
+    animal.description = description;
+    animal.appearance = appearance;
 
-    ANIMALS[animalIndex] = updatedAnimal;
-
-    res.status(200).json({ animal: updatedAnimal });
-};
-
-const deleteAnimal = (req, res, next) => {
-    console.log('DELETE Request deleting Animal');
-    const animalID = req.params.animalID;
-
-    const animal = ANIMALS.find((a) => {
-        return a.id === animalID;
-    });
+    try {
+        await animal.save();
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível atualizar o animal.',
+            500
+        );
+        return next(error);
+    }
 
     if (!animal) {
         return next(
@@ -290,7 +286,42 @@ const deleteAnimal = (req, res, next) => {
         );
     }
 
-    ANIMALS = ANIMALS.filter((a) => a.id !== animalID);
+    res.status(200).json({ animal: animal.toObject({ getters: true }) });
+};
+
+const deleteAnimal = async (req, res, next) => {
+    console.log('DELETE Request deleting Animal');
+    const animalID = req.params.animalID;
+
+    let animal;
+    try {
+        animal = await Animal.findById(animalID);
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível remover o animal.',
+            500
+        );
+        return next(error);
+    }
+
+    if (!animal) {
+        return next(
+            new HttpError(
+                'Não foi possível encontar um animal para o id ' + animalID,
+                404
+            )
+        );
+    }
+
+    try {
+        animal.remove();
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível remover o animal.',
+            500
+        );
+        return next(error);
+    }
     res.status(200).json({
         message: 'Animal deleted succesfully! ',
         animal,
