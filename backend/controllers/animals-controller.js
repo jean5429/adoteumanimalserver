@@ -1,8 +1,10 @@
-const { v4: uuidv4 } = require('uuid');
+//const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 
 const HttpError = require('../models/http-error');
 const Animal = require('../models/animal');
+const User = require('../models/user');
 
 let ANIMALS = [
     {
@@ -199,7 +201,7 @@ const createAnimal = async (req, res, next) => {
 
     if (!errors.isEmpty()) {
         console.log(errors);
-        throw new HttpError('Dados inválidos.', 422);
+        return next(new HttpError('Dados inválidos.', 422));
     }
 
     const {
@@ -213,7 +215,7 @@ const createAnimal = async (req, res, next) => {
     } = req.body;
 
     if (species !== 'dog' && species !== 'cat') {
-        throw new HttpError('Campo species deve ser cat ou dog', 422);
+        return next(new HttpError('Campo species deve ser cat ou dog', 422));
     }
     const createdAnimal = new Animal({
         name,
@@ -225,11 +227,37 @@ const createAnimal = async (req, res, next) => {
         appearance,
     });
 
+    let user;
     try {
-        await createdAnimal.save();
+        user = await User.findById(owner);
     } catch (err) {
         const error = new HttpError(
-            'Cadastro de animal falho, por favor tente novamente',
+            'Cadastro do animal falhou, por favor tente novamente',
+            500
+        );
+        return next(error);
+    }
+
+    if (!user) {
+        const error = new HttpError(
+            'Não foi possível encontrar um usuário pelo id de proprietário fornecido',
+            404
+        );
+        return next(error);
+    }
+
+    console.log(user);
+
+    try {
+        const sess = await mongoose.startSession();
+        sess.startTransaction();
+        await createdAnimal.save({ session: sess });
+        user.animals.push(createdAnimal);
+        await user.save({ session: sess });
+        sess.commitTransaction();
+    } catch (err) {
+        const error = new HttpError(
+            'Cadastro de animal falhou, por favor tente novamente',
             500
         );
         return next(error);
@@ -244,7 +272,7 @@ const updateAnimal = async (req, res, next) => {
 
     if (!errors.isEmpty()) {
         console.log(errors);
-        throw new HttpError('Dados inválidos.', 422);
+        return next(new HttpError('Dados inválidos.', 422));
     }
 
     const { name, city, image, description, appearance } = req.body;

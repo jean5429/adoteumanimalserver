@@ -7,7 +7,7 @@ const animalSchema = new Schema({
     city: { type: String, required: true },
     species: { type: String, required: true },
     image: { type: String, required: true },
-    owner: { type: Number, required: true },
+    owner: { type: mongoose.Types.ObjectId, required: true, ref: 'User' },
     description: String,
     appearance: String,
 });
