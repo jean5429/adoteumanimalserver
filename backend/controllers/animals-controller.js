@@ -1,4 +1,3 @@
-//const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
@@ -6,7 +5,8 @@ const HttpError = require('../models/http-error');
 const Animal = require('../models/animal');
 const User = require('../models/user');
 
-let ANIMALS = [
+//Examples
+/*let ANIMALS = [
     {
         id: '1',
         name: 'Caramelo',
@@ -140,7 +140,7 @@ let ANIMALS = [
         description: '',
         appearance: '',
     },
-];
+];*/
 
 const getAnimalsByUserId = async (req, res, next) => {
     console.log('GET Request in Animals by userID');
@@ -193,6 +193,22 @@ const getAnimalById = async (req, res, next) => {
     }
 
     res.json({ animal: animal.toObject({ getters: true }) });
+};
+
+const getAnimals = async (req, res, next) => {
+    let animals;
+    try {
+        animals = await Animal.find();
+    } catch (err) {
+        const error = new HttpError(
+            'Carregamento dos animais falhou, por favor tente novamente mais tarde.',
+            500
+        );
+        return next(error);
+    }
+    res.json({
+        users: animals.map((animal) => animal.toObject({ getters: true })),
+    });
 };
 
 const createAnimal = async (req, res, next) => {
@@ -249,12 +265,12 @@ const createAnimal = async (req, res, next) => {
     console.log(user);
 
     try {
-        const sess = await mongoose.startSession();
-        sess.startTransaction();
-        await createdAnimal.save({ session: sess });
+        //const sess = await mongoose.startSession();
+        //sess.startTransaction();
+        await createdAnimal.save();
         user.animals.push(createdAnimal);
-        await user.save({ session: sess });
-        sess.commitTransaction();
+        console.log(user);
+        await user.save();
     } catch (err) {
         const error = new HttpError(
             'Cadastro de animal falhou, por favor tente novamente',
@@ -323,7 +339,7 @@ const deleteAnimal = async (req, res, next) => {
 
     let animal;
     try {
-        animal = await Animal.findById(animalID);
+        animal = await Animal.findById(animalID).populate('owner');
     } catch (err) {
         const error = new HttpError(
             'Algo deu errado, não foi possível remover o animal.',
@@ -342,7 +358,9 @@ const deleteAnimal = async (req, res, next) => {
     }
 
     try {
-        animal.remove();
+        await animal.remove();
+        animal.owner.animals.pull(animal);
+        await animal.owner.save();
     } catch (err) {
         const error = new HttpError(
             'Algo deu errado, não foi possível remover o animal.',
@@ -361,3 +379,4 @@ exports.getAnimalsByUserId = getAnimalsByUserId;
 exports.createAnimal = createAnimal;
 exports.updateAnimal = updateAnimal;
 exports.deleteAnimal = deleteAnimal;
+exports.getAnimals = getAnimals;

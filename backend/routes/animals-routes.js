@@ -9,6 +9,8 @@ router.get('/user/:userID', animalsController.getAnimalsByUserId);
 
 router.get('/:animalID', animalsController.getAnimalById);
 
+router.get('/', animalsController.getAnimals);
+
 router.post(
     '/',
     [

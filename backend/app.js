@@ -32,8 +32,15 @@ app.use((error, req, res, next) => {
  * LocalHost:
  * mongodb://localhost:27017/AdoteUmAnimal
  */
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 mongoose
     .connect('mongodb://localhost:27017/AdoteUmAnimal')
+    /*.connect(
+        'mongodb://DESKTOP-3CTTGH1:27017,DESKTOP-3CTTGH1:27018,DESKTOP-3CTTGH1:27019?replicaSet=rs'
+    )*/
     .then(() => {
         console.log('DB connected succesfully!');
         app.listen(port);
