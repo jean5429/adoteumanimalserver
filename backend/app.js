@@ -28,7 +28,7 @@ app.use((error, req, res, next) => {
 });
 /*
  * MongoDB Atlas Connection - Just in case:
- * mongodb+srv://admin:YjWXySawV7g38uw@cluster0.lkuio.mongodb.net/AdoteUmAnimal?retryWrites=true&w=majority
+ * Use MongoDB Atlas URL
  * LocalHost:
  * mongodb://localhost:27017/AdoteUmAnimal
  */
@@ -38,9 +38,6 @@ mongoose.set('useCreateIndex', true);
 mongoose.set('useUnifiedTopology', true);
 mongoose
     .connect('mongodb://localhost:27017/AdoteUmAnimal')
-    /*.connect(
-        'mongodb://DESKTOP-3CTTGH1:27017,DESKTOP-3CTTGH1:27018,DESKTOP-3CTTGH1:27019?replicaSet=rs'
-    )*/
     .then(() => {
         console.log('DB connected succesfully!');
         app.listen(port);
