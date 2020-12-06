@@ -26,9 +26,12 @@ router.post(
 router.patch(
     '/:animalID',
     [
-        check('name').not().isEmpty(),
+        check('description').not().isEmpty(),
+        check('appearance').not().isEmpty(),
         check('city').not().isEmpty(),
-        check('name').isLength({ min: 2 }),
+        check('description').isLength({ min: 2 }),
+        check('city').isLength({ min: 2 }),
+        check('appearance').isLength({ min: 2 }),
     ],
     animalsController.updateAnimal
 );

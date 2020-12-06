@@ -291,7 +291,7 @@ const updateAnimal = async (req, res, next) => {
         return next(new HttpError('Dados inválidos.', 422));
     }
 
-    const { name, city, image, description, appearance } = req.body;
+    const { city, description, appearance } = req.body;
     const animalID = req.params.animalID;
 
     let animal;
@@ -305,9 +305,9 @@ const updateAnimal = async (req, res, next) => {
         return next(error);
     }
 
-    animal.name = name;
+    //animal.name = name;
     animal.city = city;
-    animal.image = image;
+    //animal.image = image;
     animal.description = description;
     animal.appearance = appearance;
 
