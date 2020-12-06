@@ -115,7 +115,10 @@ const login = async (req, res, next) => {
         return next(error);
     }
 
-    res.json({ message: 'Usuário autenticado!' });
+    res.json({
+        message: 'Usuário autenticado!',
+        user: existingUser.toObject({ getters: true }),
+    });
 };
 
 const deleteUser = (req, res, next) => {
