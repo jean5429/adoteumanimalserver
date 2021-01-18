@@ -68,14 +68,16 @@ const signup = async (req, res, next) => {
             422
         );
     }
+    const imgAddress = req.file.path
+        ? req.file.path
+        : 'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSwZrJUFAW-Bg-21tnCy9w3fiq8xTSqV5viqA&usqp=CAU';
 
     const createdUser = new User({
         name,
         email,
         password,
         type,
-        url:
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSwZrJUFAW-Bg-21tnCy9w3fiq8xTSqV5viqA&usqp=CAU',
+        image: imgAddress,
         animals: [],
     });
 
@@ -121,13 +123,21 @@ const login = async (req, res, next) => {
     });
 };
 
-const deleteUser = (req, res, next) => {
+const deleteUser = async (req, res, next) => {
     console.log('DELETE user request');
     const userID = req.params.userID;
 
-    const user = USERS.find((u) => {
-        return u.id === userID;
-    });
+    let user;
+
+    try {
+        user = await User.findById(userID);
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível remover o usuário.',
+            500
+        );
+        return next(error);
+    }
 
     if (!user) {
         return next(
@@ -138,7 +148,15 @@ const deleteUser = (req, res, next) => {
         );
     }
 
-    USERS = USERS.filter((u) => u.id !== userID);
+    try {
+        await user.remove();
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível remover o usuário.',
+            500
+        );
+        return next(error);
+    }
     res.status(200).json({
         message: 'User deleted succesfully! ',
         user,

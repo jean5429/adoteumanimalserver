@@ -157,7 +157,7 @@ const getAnimalsByUserId = async (req, res, next) => {
         return next(error);
     }
 
-    if (!animals || animals.length === 0) {
+    if (!animals) {
         const error = new HttpError(
             'Não foi possível encontar animais para o usuário.',
             404
@@ -165,9 +165,17 @@ const getAnimalsByUserId = async (req, res, next) => {
         return next(error);
     }
 
-    res.json({
-        animals: animals.map((animal) => animal.toObject({ getters: true })),
-    });
+    if (animals.length === 0) {
+        res.json({
+            animals: [],
+        });
+    } else {
+        res.json({
+            animals: animals.map((animal) =>
+                animal.toObject({ getters: true })
+            ),
+        });
+    }
 };
 
 const getAnimalById = async (req, res, next) => {
