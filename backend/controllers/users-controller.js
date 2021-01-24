@@ -163,7 +163,59 @@ const deleteUser = async (req, res, next) => {
     });
 };
 
+const updateUser = async (req, res, next) => {
+    console.log('UPDATE user request');
+    const userID = req.params.userID;
+    const { password, type } = req.body;
+
+    let updatedUser;
+
+    try {
+        updatedUser = await User.findById(userID);
+    } catch (err) {
+        const error = new HttpError(
+            'Algo deu errado, não foi possível atualizar o usuário.',
+            500
+        );
+        return next(error);
+    }
+
+    if (!updatedUser) {
+        return next(
+            new HttpError(
+                'Não foi possível encontar um usuário para o id ' + userID,
+                404
+            )
+        );
+    }
+
+    let imgAddress;
+    if (req.hasOwnProperty('file')) {
+        imgAddress = req.file.path;
+    } else {
+        imgAddress =
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSwZrJUFAW-Bg-21tnCy9w3fiq8xTSqV5viqA&usqp=CAU';
+    }
+
+    updatedUser.password = password;
+    updatedUser.type = type;
+    updatedUser.image = imgAddress;
+
+    try {
+        await updatedUser.save();
+    } catch (err) {
+        const error = new HttpError(
+            'Atualização de usuário falhou, por favor tente novamente',
+            500
+        );
+        return next(error);
+    }
+
+    res.status(201).json({ user: updatedUser.toObject({ getters: true }) });
+};
+
 exports.getUsers = getUsers;
 exports.signup = signup;
 exports.login = login;
 exports.deleteUser = deleteUser;
+exports.updateUser = updateUser;

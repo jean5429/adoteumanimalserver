@@ -241,11 +241,16 @@ const createAnimal = async (req, res, next) => {
     if (species !== 'dog' && species !== 'cat') {
         return next(new HttpError('Campo species deve ser cat ou dog', 422));
     }
+
+    const imgAddress = req.file.path
+        ? req.file.path
+        : 'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSwZrJUFAW-Bg-21tnCy9w3fiq8xTSqV5viqA&usqp=CAU';
+
     const createdAnimal = new Animal({
         name,
         city,
         species,
-        image,
+        image: imgAddress,
         owner,
         description,
         appearance,
