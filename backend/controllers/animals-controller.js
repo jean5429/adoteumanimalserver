@@ -215,7 +215,7 @@ const getAnimals = async (req, res, next) => {
         return next(error);
     }
     res.json({
-        users: animals.map((animal) => animal.toObject({ getters: true })),
+        animals: animals.map((animal) => animal.toObject({ getters: true })),
     });
 };
 
